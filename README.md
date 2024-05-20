@@ -30,19 +30,10 @@ Platforms
 The RKE2 Ansible playbook supports all [RKE2 Supported Operating Systems](https://docs.rke2.io/install/requirements/#operating-systems)
 
 Supported Operating Systems:
-```yaml
-SLES:
-  - 15 SP2 (amd64)
-CentOS:
-  - 7.8 (amd64)
-  - 8.2 (amd64)
-Red Hat:
-  - 7.8 (amd64)
-  - 8.2 (amd64)
-Ubuntu:
-  - bionic/18.04 (amd64)
-  - focal/20.04 (amd64)
-```
+- SLES 15
+- Rocky 8 and 9
+- RedHat: 8 and 9
+- Ubuntu: 18, 20, and 22
 
 
 System requirements
@@ -67,18 +58,23 @@ Create a new directory based on the `sample` directory within the `inventory` di
 cp -R inventory/sample inventory/my-cluster
 ```
 
-Second, edit `inventory/my-cluster/hosts.ini` to match the system information gathered above. For example:
+Second, edit `inventory/my-cluster/hosts.yaml` to match the system information gathered above. For example:
 
-```bash
-[rke2_servers]
-192.16.35.12
-
-[rke2_agents]
-192.16.35.[10:11]
-
-[rke2_cluster:children]
-rke2_servers
-rke2_agents
+```yaml
+rke2_cluster:
+  children:
+    rke2_servers:
+      hosts:
+        server1.example.com:
+    rke2_agents:
+      hosts:
+        agent1.example.com:
+        agent2.example.com:
+          node_labels:
+          - agent2Label=true"
+all:
+  vars:
+    install_rke2_version: v1.27.10+rke2r1
 ```
 
 If needed, you can also edit `inventory/my-cluster/group_vars/rke2_agents.yml` and `inventory/my-cluster/group_vars/rke2_servers.yml` to match your environment.
@@ -86,12 +82,12 @@ If needed, you can also edit `inventory/my-cluster/group_vars/rke2_agents.yml` a
 Start provisioning of the cluster using the following command:
 
 ```bash
-ansible-playbook site.yml -i inventory/my-cluster/hosts.ini
+ansible-playbook site.yml -i inventory/my-cluster/hosts.yml
 ```
 
 Tarball Install/Air-Gap Install
 -------------------------------
-Added the neeed files to the [tarball_install](tarball_install]/) directory.
+Added the neeed files to the [tarball_install](tarball_install/) directory.
 
 Further info can be found [here](tarball_install/README.md)
 
@@ -129,14 +125,23 @@ ansible -i 18.217.113.10, all -u ec2-user -a "/usr/local/bin/rke2-uninstall.sh"
 ```
 On rare occasions you may have to run the uninstall commands a second time.
 
+Known Issues
+------------------
+- For RHEL8+ Operating Systems that have fapolicyd daemon running, rpm installation of RKE2 will fail due to a permission error while starting containerd. Users have to add the following rules file before installing RKE2. This is not an issue if the install.sh script is used to install RKE2. The RPM issue is expected to be fixed in later versions of RKE2.
+```bash
+cat <<-EOF >>"/etc/fapolicyd/rules.d/80-rke2.rules"
+allow perm=any all : dir=/var/lib/rancher/
+allow perm=any all : dir=/opt/cni/
+allow perm=any all : dir=/run/k3s/
+allow perm=any all : dir=/var/lib/kubelet/
+EOF
+
+systemctl restart fapolicyd
+
+```
+
 
 Author Information
 ------------------
 
-[Dave Vigil](https://github.com/dgvigil)
-
-[Brandon Gulla](https://github.com/bgulla)
-
-[Rancher Federal](https://rancherfederal.com/)
-
-[Mike D'Amato](https://github.com/mdamato)
+[Rancher Government Solutions](https://ranchergovernment.com/)

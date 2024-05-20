@@ -1,5 +1,7 @@
 ---
 tarball_dir: "/usr/local"
+rke2_tarball_url: ""
+rke2_images_urls: []
 rke2_channel: stable
 audit_policy_config_file_path: ""
 registry_config_file_path: ""
@@ -13,7 +15,7 @@ rke2_common_yum_repo:
   enabled: yes
 
 rke2_versioned_yum_repo:
-  name: "rke2-v{{ rke2_version_majmin }}"  # noqa var-spacing
+  name: "rke2-v{{ rke2_version_majmin }}"  # noqa jinja[spacing]
   description: "Rancher RKE2 Version"
   baseurl: "https://rpm.rancher.io/rke2/latest/{{ rke2_version_majmin }}/centos/$releasever/$basearch"
   gpgcheck: true
